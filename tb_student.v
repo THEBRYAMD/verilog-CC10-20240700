@@ -99,6 +99,182 @@ module tb_student;
 
         // Para K=3 es larga, para K=5 es corta
         paso(0, 1, 0, 16'h0303, 16'h0103);
+        
+        // PRUEBA: valid se borra incluso con en=0
+        paso(0, 0, 0, 16'h0203, 16'h0003);
+
+        // Sin nueva pulsacion, se conserva el resultado
+        paso(0, 1, 0, 16'h0203, 16'h0003);
+
+        // PRUEBA: pausa durante una pulsacion
+        paso(0, 1, 1, 16'h0203, 16'h0003);
+        paso(0, 1, 1, 16'h0203, 16'h0003);
+
+        // Deshabilitar el circuito
+        paso(0, 0, 1, 16'h0203, 16'h0003);
+
+        // Soltar el boton mientras en=0
+        paso(0, 0, 0, 16'h0203, 16'h0003);
+
+        // Volver a habilitar: publica duracion 2
+        paso(0, 1, 0, 16'h0102, 16'h0102);
+
+        // PRUEBA: reset borra todo
+        paso(1, 1, 0, 16'h0000, 16'h0000);
+        
+        
+        // =========================================
+        // PRUEBA: SATURACION DEL CONTADOR
+        // =========================================
+
+        // Reiniciar antes de las pruebas
+        paso(1, 1, 0, 16'h0000, 16'h0000);
+
+        // CASO 1: Pulsacion de un solo ciclo
+        paso(0, 1, 1, 16'h0000, 16'h0000);
+
+        // Soltar: duracion = 1, pulsacion corta
+        paso(0, 1, 0, 16'h0101, 16'h0101);
+
+        // Valid debe volver a cero
+        paso(0, 1, 0, 16'h0001, 16'h0001);
+
+
+        // CASO 2: Pulsacion de 255 ciclos
+        paso(1, 1, 0, 16'h0000, 16'h0000);
+
+        repeat (255)
+            paso(0, 1, 1, 16'h0000, 16'h0000);
+
+        // Soltar: duracion = 255
+        paso(0, 1, 0, 16'h03FF, 16'h03FF);
+
+        // Valid vuelve a cero; resultado retenido
+        paso(0, 1, 0, 16'h02FF, 16'h02FF);
+
+
+        // CASO 3: Pulsacion de 260 ciclos
+        paso(1, 1, 0, 16'h0000, 16'h0000);
+
+        repeat (260)
+            paso(0, 1, 1, 16'h0000, 16'h0000);
+
+        // Aunque fueron 260, debe publicar 255
+        paso(0, 1, 0, 16'h03FF, 16'h03FF);
+
+        // Comprobar que el resultado se conserva
+        paso(0, 1, 0, 16'h02FF, 16'h02FF);
+        
+        
+        // =========================================
+        // PRUEBA: FRONTERAS K-1 Y K
+        // =========================================
+
+        paso(1, 1, 0, 16'h0000, 16'h0000);
+
+        // Pulsacion de 4 ciclos
+        repeat (4)
+            paso(0, 1, 1, 16'h0000, 16'h0000);
+
+        // K=3: larga, K=5: corta
+        paso(0, 1, 0, 16'h0304, 16'h0104);
+
+        // Valid vuelve a cero
+        paso(0, 1, 0, 16'h0204, 16'h0004);
+
+
+        // Pulsacion de 5 ciclos
+        repeat (5)
+            paso(0, 1, 1, 16'h0204, 16'h0004);
+
+        // Ambas son largas
+        paso(0, 1, 0, 16'h0305, 16'h0305);
+
+
+        // =========================================
+        // PRUEBA: RESET DURANTE PULSACION
+        // =========================================
+
+        // Reset inicial
+        paso(1, 1, 0, 16'h0000, 16'h0000);
+
+        // Comenzar pulsacion de 4 ciclos
+        repeat (4)
+            paso(0, 1, 1, 16'h0000, 16'h0000);
+
+        // Reset mientras el boton sigue presionado
+        paso(1, 1, 1, 16'h0000, 16'h0000);
+
+        // Soltar boton: no debe publicar nada
+        paso(0, 1, 0, 16'h0000, 16'h0000);
+
+        // Comprobar que todo sigue en cero
+        paso(0, 1, 0, 16'h0000, 16'h0000);
+
+
+        // =========================================
+        // PRUEBA: PRIORIDAD DEL RESET
+        // =========================================
+
+        // Boton presionado durante 3 ciclos
+        repeat (3)
+            paso(0, 1, 1, 16'h0000, 16'h0000);
+
+        // Reset activo aunque en=0
+        paso(1, 0, 1, 16'h0000, 16'h0000);
+
+        // Al habilitar y liberar, no hay resultado
+        paso(0, 1, 0, 16'h0000, 16'h0000);
+
+        
+        // =========================================
+        // PRUEBA: FRONTERAS K-1 Y K
+        // =========================================
+
+        // Reiniciamos los dos circuitos
+        paso(1, 1, 0, 16'h0000, 16'h0000);
+
+        // Pulsacion de 4 ciclos
+        repeat (4)
+            paso(0, 1, 1, 16'h0000, 16'h0000);
+
+        // K=3: larga / K=5: corta
+        paso(0, 1, 0, 16'h0304, 16'h0104);
+
+        // Valid vuelve a cero
+        paso(0, 1, 0, 16'h0204, 16'h0004);
+
+        // Pulsacion de 5 ciclos
+        repeat (5)
+            paso(0, 1, 1, 16'h0204, 16'h0004);
+
+        // Ambas pulsaciones son largas
+        paso(0, 1, 0, 16'h0305, 16'h0305);
+
+        // =========================================
+        // PRUEBA: VALID CON EN=0
+        // =========================================
+
+        // Se borra valid pero se conserva el resultado
+        paso(0, 0, 0, 16'h0205, 16'h0205);
+
+        // =========================================
+        // PRUEBA: RESET DURANTE PULSACION
+        // =========================================
+
+        // Iniciamos otra pulsacion de 3 ciclos
+        repeat (3)
+            paso(0, 1, 1, 16'h0205, 16'h0205);
+
+        // Reset activo incluso con en=0 y boton=1
+        paso(1, 0, 1, 16'h0000, 16'h0000);
+
+        // Liberamos el boton
+        // No debe publicarse ninguna pulsacion
+        paso(0, 1, 0, 16'h0000, 16'h0000);
+
+        // Comprobamos que todo sigue en cero
+        paso(0, 1, 0, 16'h0000, 16'h0000);
 
         // Resultado final
         if (errores == 0)
