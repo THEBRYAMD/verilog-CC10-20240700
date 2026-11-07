@@ -19,6 +19,30 @@ module tb_student;
 
     integer errores = 0;
 
+
+    // Variables para las pruebas pseudoaleatorias
+    integer i;
+    reg [31:0] semilla;
+
+    // Modelo de referencia
+    reg [7:0] ref_contador;
+    reg [7:0] ref_duracion;
+    reg ref_valid;
+    reg ref_larga3;
+    reg ref_larga5;
+
+    // Entradas aleatorias
+    reg random_rst;
+    reg random_en;
+    reg random_boton;
+    reg [7:0] random_cmd;
+    reg [7:0] random_data;
+
+    // Resultados esperados
+    reg [15:0] esperado3;
+    reg [15:0] esperado5;
+
+
     // Primer circuito: K = 3
     top_module #(.K(3)) dut3 (
         .clk(clk),
@@ -275,6 +299,114 @@ module tb_student;
 
         // Comprobamos que todo sigue en cero
         paso(0, 1, 0, 16'h0000, 16'h0000);
+        
+        
+        // =========================================
+        // PRUEBA G6: 900 CICLOS PSEUDOALEATORIOS
+        // =========================================
+
+        // Reset para iniciar desde un estado conocido
+        paso(1, 1, 0, 16'h0000, 16'h0000);
+
+        // Inicializar nuestro modelo de referencia
+        ref_contador = 8'd0;
+        ref_duracion = 8'd0;
+        ref_valid = 1'b0;
+        ref_larga3 = 1'b0;
+        ref_larga5 = 1'b0;
+
+        // Semilla fija para repetir las pruebas
+        semilla = 32'h1A2B3C4D;
+
+        for (i = 0; i < 900; i = i + 1) begin
+
+            // Generar un nuevo numero pseudoaleatorio
+            semilla = semilla * 32'd1664525
+                    + 32'd1013904223;
+
+            // Preparar entradas variables
+            random_rst = (semilla[31:26] == 6'b000000);
+            random_en = (semilla[25:23] != 3'b000);
+            random_boton = (semilla[22:21] != 2'b00);
+
+            random_cmd = {semilla[20:14], random_boton};
+            random_data = semilla[13:6];
+
+            // MODELO DE REFERENCIA
+            if (random_rst) begin
+
+                ref_contador = 8'd0;
+                ref_duracion = 8'd0;
+                ref_valid = 1'b0;
+                ref_larga3 = 1'b0;
+                ref_larga5 = 1'b0;
+
+            end
+            else begin
+
+                // Valid se borra en cada ciclo
+                ref_valid = 1'b0;
+
+                if (random_en) begin
+
+                    if (random_cmd[0]) begin
+
+                        // Contador con saturacion
+                        if (ref_contador < 8'd255)
+                            ref_contador = ref_contador + 8'd1;
+
+                    end
+                    else if (ref_contador > 8'd0) begin
+
+                        // Publicar resultado al liberar
+                        ref_duracion = ref_contador;
+
+                        // Clasificar para cada K
+                        ref_larga3 = (ref_contador >= 3);
+                        ref_larga5 = (ref_contador >= 5);
+
+                        ref_valid = 1'b1;
+                        ref_contador = 8'd0;
+
+                    end
+                end
+            end
+
+            // Construir los resultados esperados
+            esperado3 = {6'b000000, ref_larga3,
+                         ref_valid, ref_duracion};
+
+            esperado5 = {6'b000000, ref_larga5,
+                         ref_valid, ref_duracion};
+
+            // Aplicar las entradas al circuito real
+            @(negedge clk);
+            rst = random_rst;
+            en = random_en;
+            cmd = random_cmd;
+            data = random_data;
+
+            // Esperar el resultado del circuito
+            @(posedge clk);
+            #1;
+
+            // Mostrar el ciclo si existe una diferencia
+            if ((y3 !== esperado3) ||
+                (y5 !== esperado5)) begin
+
+                $display("FALLO en ciclo aleatorio %0d", i);
+                $display("rst=%b en=%b cmd=%h data=%h",
+                         rst, en, cmd, data);
+            end
+
+            // Reutilizar nuestra tarea de comprobacion
+            comprobar(esperado3, esperado5);
+
+        end
+
+        if (errores == 0)
+            $display("OK: 900 ciclos aleatorios superados");
+
 
         // Resultado final
         if (errores == 0)
