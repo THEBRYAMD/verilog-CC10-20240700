@@ -89,9 +89,9 @@ Pulsación de 255 ciclos----**Superada**
 
 Pulsación de 260 ciclos; saturación en 255------**Superada**
 
-Pruebas ampliadas de pausa, reset y fronteras K−1/K-------**Pendiente de verificar la ejecución final**
+Pruebas ampliadas de pausa, reset y fronteras K−1/K-------**Superada**
 
-Secuencia pseudoaleatoria reproducible de 900 ciclos------**Pendiente de implementar/verificar**
+Secuencia pseudoaleatoria reproducible de 900 ciclos------**Superada**
 
 
 
